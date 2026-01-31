@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Create Account</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
+body{
+    background:#f5f6fa;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+/* CARD */
+.card{
+    background:#fff;
+    width:420px;
+    padding:40px;
+    border-radius:14px;
+    box-shadow:0 10px 30px rgba(0,0,0,.08);
+    text-align:center;
+}
+
+.card h2{margin-bottom:25px}
+
+/* INPUTS */
+.card input{
+    width:100%;
+    padding:12px;
+    margin-bottom:14px;
+    border-radius:8px;
+    border:1px solid #ddd;
+    font-size:14px;
+}
+
+/* CHECKBOX ROW */
+.checkbox-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:14px;
+    font-size:13px;
+}
+
+.checkbox-row label{
+    cursor:pointer;
+    color:#e74c3c;
+    font-weight:600;
+}
+
+/* ERROR */
+.error{
+    color:#e74c3c;
+    font-size:13px;
+    margin-bottom:12px;
+    display:none;
+}
+
+/* BUTTON */
+.card button{
+    width:100%;
+    padding:14px;
+    border:none;
+    border-radius:10px;
+    background:#e74c3c;
+    color:#fff;
+    font-size:16px;
+    cursor:pointer;
+}
+
+/* FOOTER */
+.footer{
+    margin-top:18px;
+    font-size:14px;
+}
+.footer a{
+    color:#e74c3c;
+    text-decoration:none;
+    font-weight:600;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+    <h2>Create Account</h2>
+
+    <input type="text" id="firstName" placeholder="First Name">
+    <input type="text" id="lastName" placeholder="Last Name">
+    <input type="email" id="email" placeholder="Email">
+
+    <div class="checkbox-row">
+        <input type="checkbox" id="useEmail">
+        <label for="useEmail">Use Email as Username</label>
+    </div>
+
+    <input type="text" id="username" placeholder="Username">
+    <input type="password" id="password" placeholder="Password">
+    <input type="password" id="confirmPassword" placeholder="Confirm Password">
+
+    <div class="error" id="error"></div>
+
+    <button id="signupBtn" type="button">Sign Up</button>
+
+    <div class="footer">
+        Already have an account?
+        <a href="/login.html">Login</a>
+    </div>
+</div>
+
+<script>
+const emailInput = document.getElementById("email");
+const usernameInput = document.getElementById("username");
+const useEmailCheckbox = document.getElementById("useEmail");
+const passwordInput = document.getElementById("password");
+const confirmInput = document.getElementById("confirmPassword");
+const error = document.getElementById("error");
+
+/* USE EMAIL PREFIX AS USERNAME */
+useEmailCheckbox.addEventListener("change", () => {
+    if (useEmailCheckbox.checked && emailInput.value.includes("@")) {
+        usernameInput.value = emailInput.value.split("@")[0];
+        usernameInput.readOnly = true;
+    } else {
+        usernameInput.readOnly = false;
+        usernameInput.value = "";
+    }
+});
+
+/* UPDATE USERNAME WHEN EMAIL CHANGES */
+emailInput.addEventListener("input", () => {
+    if (useEmailCheckbox.checked && emailInput.value.includes("@")) {
+        usernameInput.value = emailInput.value.split("@")[0];
+    }
+});
+
+/* SIGN UP */
+document.getElementById("signupBtn").addEventListener("click", () => {
+    error.style.display = "none";
+
+    const email = emailInput.value.trim();
+
+    if (!email.endsWith("@gmail.com")) {
+        error.textContent = "Email must end with @gmail.com";
+        error.style.display = "block";
+        return;
+    }
+
+    if (passwordInput.value === "" || confirmInput.value === "") {
+        error.textContent = "Password fields cannot be empty";
+        error.style.display = "block";
+        return;
+    }
+
+    if (passwordInput.value !== confirmInput.value) {
+        error.textContent = "Password and Confirm Password must match";
+        error.style.display = "block";
+        return;
+    }
+
+    // ✅ NO ALERT
+    // ✅ DIRECT REDIRECT
+    window.location.href = "/login.html";
+});
+</script>
+
+</body>
+</html>

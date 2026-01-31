@@ -1,0 +1,102 @@
+body {
+    background: linear-gradient(180deg, #f4f5f7, #eaeaea);
+}
+
+.signup-container {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 40px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+}
+
+/* NAVBAR */
+.navbar {
+    height: 60px;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 40px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.brand {
+    font-weight: 600;
+}
+
+.nav-actions a {
+    text-decoration: none;
+    color: #e74c3c;
+}
+
+/* SIGNUP BOX */
+.signup-container {
+    max-width: 420px;
+    margin: 80px auto;
+    background: white;
+    padding: 35px;
+    border-radius: 14px;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.signup-container h2 {
+    margin-bottom: 25px;
+}
+
+/* INPUTS */
+.signup-container input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 14px;
+    font-size: 15px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
+
+/* CHECKBOX */
+.checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+    font-size: 14px;
+    text-align: left;
+}
+
+/* MESSAGE */
+#formMessage {
+    font-size: 14px;
+    margin-bottom: 12px;
+}
+
+.error {
+    color: #e74c3c;
+}
+
+.success {
+    color: #2ecc71;
+}
+
+/* BUTTON */
+.signup-container button {
+    width: 100%;
+    padding: 14px;
+    background: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+/* LINK */
+.login-link {
+    margin-top: 18px;
+    font-size: 14px;
+}
+
+.login-link a {
+    color: #e74c3c;
+    text-decoration: none;
+}
