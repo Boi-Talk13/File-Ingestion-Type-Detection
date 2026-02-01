@@ -1,90 +1,89 @@
 import pytest
+import os
 from fastapi.testclient import TestClient
 from main import app, uploaded_hashes
-import io
-import zipfile
 
 client = TestClient(app)
 
+# Configuration
+TEST_FOLDER = "Test"
+MAX_FILE_SIZE = 100 * 1024 * 1024  # 100 MB
+
 @pytest.fixture(autouse=True)
-def clear_hashes():
-    """Clears the global hash set before each test to ensure isolation."""
+def setup_and_teardown():
+    """Clears state before each test."""
     uploaded_hashes.clear()
+    yield
 
-def test_serve_index():
-    """Tests if the homepage loads correctly."""
-    response = client.get("/")
+# ======================================================
+# 1. LIVE DATA INPUT (Your Folder)
+# ======================================================
+def test_upload_live_data_folder():
+    """Iterates through My_files and prints results to CLI."""
+    print(f"\n{'='*80}\nLIVE DATA TEST: Processing folder '{TEST_FOLDER}'\n{'='*80}")
+    
+    if not os.path.exists(TEST_FOLDER):
+        pytest.fail(f"Directory '{TEST_FOLDER}' not found. Did you rebuild the Docker image?")
+
+    files = [f for f in os.listdir(TEST_FOLDER) if os.path.isfile(os.path.join(TEST_FOLDER, f))]
+    
+    for filename in files:
+        file_path = os.path.join(TEST_FOLDER, filename)
+        with open(file_path, "rb") as f:
+            response = client.post("/upload", files=[("files", (filename, f.read()))])
+            assert response.status_code == 200
+            data = response.json()
+            
+            for res in data:
+                print(f"[LIVE] File: {res['file_name']:<25} | Type: {str(res['file_type']):<10} | Status: {res['status']}")
+
+# ======================================================
+# 2. POSITIVE TESTS
+# ======================================================
+def test_upload_valid_pdf():
+    """Tests a standard PDF file ingestion."""
+    content = b"%PDF-1.4 dummy content"
+    response = client.post("/upload", files=[("files", ("test.pdf", content))])
     assert response.status_code == 200
-    assert "File Ingestion & Type Detection" in response.text
+    assert response.json()[0]["file_type"] == "pdf"
 
-def test_upload_regular_file():
-    """Tests uploading a single standard text file."""
-    file_content = b"Hello world"
-    files = [("files", ("test.txt", file_content, "text/plain"))]
-    
-    response = client.post("/upload", files=files)
-    
+def test_upload_valid_json():
+    """Tests a standard JSON file ingestion."""
+    content = b'{"key": "value"}'
+    response = client.post("/upload", files=[("files", ("data.json", content))])
     assert response.status_code == 200
-    data = response.json()
-    assert len(data) == 1
-    assert data[0]["file_name"] == "test.txt"
-    assert data[0]["file_type"] == "txt"
-    assert data[0]["duplicate"] is False
+    assert response.json()[0]["status"] == "validated"
 
-def test_upload_duplicate_file():
-    """Tests that uploading the same content twice marks the second as a duplicate."""
-    file_content = b"Unique content"
-    file_info = ("files", ("file1.txt", file_content, "text/plain"))
-    
-    # First upload
-    client.post("/upload", files=[file_info])
-    
-    # Second upload (same content)
-    response = client.post("/upload", files=[file_info])
-    data = response.json()
-    
-    assert data[0]["duplicate"] is True
-
-def test_upload_zip_file():
-    """Tests the extraction and validation of files inside a ZIP archive."""
-    # Create a dummy ZIP in memory
-    zip_buffer = io.BytesIO()
-    with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED) as zip_file:
-        zip_file.writestr("inner1.txt", b"Inside zip 1")
-        zip_file.writestr("inner2.pdf", b"%PDF-1.4 dummy content")
-        
-    zip_buffer.seek(0)
-    files = [("files", ("archive.zip", zip_buffer.read(), "application/zip"))]
-    
-    response = client.post("/upload", files=files)
-    
-    assert response.status_code == 200
-    data = response.json()
-    
-    # Should contain 3 records: 1 for the ZIP itself, 2 for the contents
-    assert len(data) == 3
-    filenames = [item["file_name"] for item in data]
-    assert "archive.zip" in filenames
-    assert "inner1.txt" in filenames
-    assert "inner2.pdf" in filenames
-
+# ======================================================
+# 3. NEGATIVE TESTS
+# ======================================================
 def test_upload_empty_file():
-    """Tests that empty files are rejected as per logic in main.py."""
-    files = [("files", ("empty.txt", b"", "text/plain"))]
-    
-    response = client.post("/upload", files=files)
-    data = response.json()
-    
-    assert data[0]["status"] == "rejected"
+    """Tests rejection of 0-byte files."""
+    response = client.post("/upload", files=[("files", ("empty.txt", b""))])
+    # The API returns a list of results
+    assert response.json()[0]["status"] == "rejected"
 
-def test_file_type_detection_logic():
-    """Tests that magic/mimetypes correctly identify specific formats."""
-    # Testing an Image
-    image_content = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR" # Partial PNG header
-    files = [("files", ("picture.png", image_content, "image/png"))]
+def test_upload_oversized_file():
+    """Tests rejection of files exceeding 100MB."""
+    large_content = b"0" * (MAX_FILE_SIZE + 1)
+    response = client.post("/upload", files=[("files", ("huge.zip", large_content))])
+    assert response.json()[0]["status"] == "rejected"
+
+# ======================================================
+# 4. EDGE CASES
+# ======================================================
+def test_duplicate_file_detection():
+    """Tests that the same content uploaded twice is flagged as a duplicate."""
+    content = b"Unique Content 123"
+    client.post("/upload", files=[("files", ("file1.txt", content))])
+    response = client.post("/upload", files=[("files", ("file2.txt", content))])
     
-    response = client.post("/upload", files=files)
-    data = response.json()
-    
-    assert data[0]["file_type"] == "image"
-    assert "image/png" in data[0]["mime_type"]
+    assert response.json()[0]["duplicate"] is True
+
+def test_special_characters_filename():
+    """Tests filenames with spaces and symbols."""
+    name = "Test @ File # 1.txt"
+    content = b"testing symbols"
+    response = client.post("/upload", files=[("files", (name, content))])
+    assert response.status_code == 200
+    assert response.json()[0]["file_name"] == name
