@@ -6,7 +6,7 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 # Set the working directory inside the container
-WORKDIR /app
+WORKDIR /
 
 # Install system dependencies needed for python-magic
 RUN apt-get update && apt-get install -y --no-install-recommends \
