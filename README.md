@@ -19,8 +19,8 @@ All results are displayed on the same page without navigation or reloads.
 
 - Single-page user interface  
 - Multiple file upload support  
-- Drag-and-drop file upload  
-- Automatic file type detection  
+- File upload using file picker  
+- Automatic file type detection (limited)  
 - MIME type identification  
 - SHA-256 hash generation  
 - Duplicate file detection  
@@ -46,6 +46,21 @@ It exists only to simulate UI flow for academic and demo purposes.
 
 ---
 
+## ⚠️ Known Limitations in Current Implementation
+
+### JSON File Type Detection
+- JSON files are **not correctly recognized**
+- File type is shown as **UNKNOWN**
+- This happens due to limitations in the file type detection logic
+- Content-based JSON inspection is not implemented yet
+
+### Drag and Drop Upload
+- Drag-and-drop functionality is **present in the UI**
+- However, it is **not fully functional**
+- Reliable uploads work only through the file selection button
+
+---
+
 ## Technology Stack
 
 ### Backend
@@ -68,12 +83,12 @@ It exists only to simulate UI flow for academic and demo purposes.
 
 1. User opens the application  
 2. (Optional) Logs in using dummy credentials  
-3. Selects or drags files into the upload area  
+3. Selects files using the file picker  
 4. Clicks the upload button  
 5. Files are sent to the `/upload` API endpoint  
 6. Backend processes each file:
    - Reads file content  
-   - Detects MIME type  
+   - Attempts MIME type detection  
    - Generates SHA-256 hash  
    - Checks for duplicates  
    - Collects metadata  
@@ -149,24 +164,39 @@ http://127.0.0.1:8000
 
 ---
 
-## Limitations
+## Positives of the Project
 
-- No persistent storage  
-- No real authentication or authorization  
-- No malware scanning  
-- No rate limiting  
-- No sandboxing of uploaded files  
+- Clean and simple single-page design  
+- Demonstrates a complete file ingestion pipeline  
+- Supports multiple file uploads  
+- Uses hashing for duplicate detection  
+- Modular backend logic, easy to extend  
+- Clear separation between frontend and backend  
 
 ---
 
-## Future Enhancements
+## Negatives of the Project
 
+- JSON file type not properly detected  
+- Drag-and-drop upload not fully functional  
+- No persistent database storage  
+- Dummy authentication only  
+- No real malware scanning  
+- No rate limiting or request validation  
+
+---
+
+## Future Enhancements / Initiatives
+
+- Proper JSON file detection using content parsing  
+- Fully functional drag-and-drop upload support  
 - Database integration (PostgreSQL / MongoDB)  
 - Real authentication using JWT  
-- Virus scanning with ClamAV  
-- Cloud object storage (S3 / GCS)  
-- Rate limiting and request validation  
-- Background processing using Celery / RQ  
+- Virus scanning using ClamAV  
+- Cloud object storage (AWS S3 / Google Cloud Storage)  
+- Rate limiting and security hardening  
+- Background processing using Celery or RQ  
+- Detailed upload logs and audit trail  
 
 ---
 
@@ -177,7 +207,7 @@ http://127.0.0.1:8000
   - Backend: Render, Railway, Fly.io, or VPS  
   - Frontend: Vercel or Netlify (static only)  
 
-Vercel does not run FastAPI directly.
+Note: Vercel does not run FastAPI directly.
 
 ---
 
@@ -185,4 +215,4 @@ Vercel does not run FastAPI directly.
 
 MIT License  
 
-This project is intended for academic, demo, and prototype use.
+This project is intended for **academic, demo, and prototype use**.
