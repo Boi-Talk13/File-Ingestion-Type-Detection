@@ -9,6 +9,7 @@ import io
 from datetime import datetime, timezone
 import magic
 import mimetypes
+import json
 
 # ======================================================
 # APP
@@ -27,7 +28,6 @@ app.add_middleware(
 
 # ======================================================
 # STATIC FILES
-# (files are in same folder as main.py)
 # ======================================================
 app.mount("/static", StaticFiles(directory="."), name="static")
 
@@ -69,9 +69,16 @@ def is_valid_zip_entry(name: str, content: bytes) -> bool:
     return True
 
 # ======================================================
-# FILE TYPE DETECTION (FIXED)
+# FILE TYPE DETECTION (FIXED ✅)
 # ======================================================
 def detect_file_type(name: str, content: bytes):
+    name_lower = name.lower()
+
+    # ✅ 1. EXTENSION FIRST (MOST RELIABLE FOR JSON)
+    if name_lower.endswith(".json"):
+        return "json", "application/json"
+
+    # 2. MIME DETECTION
     detected_mime = magic.Magic(mime=True).from_buffer(content)
     ext_mime, _ = mimetypes.guess_type(name)
     final_mime = detected_mime or ext_mime or "application/octet-stream"
@@ -99,6 +106,9 @@ def detect_file_type(name: str, content: bytes):
 
     return "unknown", final_mime
 
+# ======================================================
+# FILE PROCESSING
+# ======================================================
 def process_regular_file(name: str, content: bytes):
     record = base_record(name)
 
@@ -118,6 +128,14 @@ def process_regular_file(name: str, content: bytes):
         "duplicate": duplicate,
         "scan_status": "clean"
     })
+
+    # ✅ OPTIONAL: JSON CONTENT VALIDATION
+    if file_type == "json":
+        try:
+            json.loads(content.decode("utf-8"))
+        except Exception:
+            record["status"] = "rejected"
+            record["scan_status"] = "invalid_json"
 
     return record
 
@@ -140,7 +158,7 @@ def serve_signup():
         return f.read()
 
 # ======================================================
-# FILE UPLOAD API (ZIP FIX APPLIED ✅)
+# FILE UPLOAD API
 # ======================================================
 @app.post("/upload")
 async def upload_files(files: List[UploadFile] = File(...)):
@@ -150,15 +168,7 @@ async def upload_files(files: List[UploadFile] = File(...)):
         content = await file.read()
         record = base_record(file.filename)
 
-        if not content:
-            record.update({
-                "status": "rejected",
-                "scan_status": "not_applicable"
-            })
-            results.append(record)
-            continue
-
-        if len(content) > MAX_FILE_SIZE:
+        if not content or len(content) > MAX_FILE_SIZE:
             record.update({
                 "status": "rejected",
                 "scan_status": "not_applicable"
@@ -168,7 +178,7 @@ async def upload_files(files: List[UploadFile] = File(...)):
 
         filename_lower = file.filename.lower()
 
-        # ✅ HANDLE ZIP ONLY IF EXTENSION IS .zip
+        # ZIP HANDLING
         if filename_lower.endswith(".zip"):
             try:
                 zip_data = zipfile.ZipFile(io.BytesIO(content))
@@ -204,7 +214,7 @@ async def upload_files(files: List[UploadFile] = File(...)):
                 results.append(record)
                 continue
 
-        # ✅ ALL OTHER FILES (xlsx, docx, pptx, txt, csv, images)
+        # ALL OTHER FILES
         results.append(process_regular_file(file.filename, content))
 
     return results
