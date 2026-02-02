@@ -20,12 +20,13 @@ All results are displayed on the same page without navigation or reloads.
 - Single-page user interface  
 - Multiple file upload support  
 - File upload using file picker  
-- Automatic file type detection (limited)  
+- Automatic file type detection  
 - MIME type identification  
 - SHA-256 hash generation  
 - Duplicate file detection  
 - File size calculation  
 - ZIP file handling  
+- JSON file support  
 - Scan-status placeholder for future virus scanning  
 - Dummy login and signup flow  
 
@@ -48,15 +49,9 @@ It exists only to simulate UI flow for academic and demo purposes.
 
 ## ⚠️ Known Limitations in Current Implementation
 
-### JSON File Type Detection
-- JSON files are **not correctly recognized**
-- File type is shown as **UNKNOWN**
-- This happens due to limitations in the file type detection logic
-- Content-based JSON inspection is not implemented yet
-
 ### Drag and Drop Upload
-- Drag-and-drop functionality is **present in the UI**
-- However, it is **not fully functional**
+- Drag-and-drop functionality is present in the UI
+- However, it is not fully functional
 - Reliable uploads work only through the file selection button
 
 ---
@@ -88,7 +83,7 @@ It exists only to simulate UI flow for academic and demo purposes.
 5. Files are sent to the `/upload` API endpoint  
 6. Backend processes each file:
    - Reads file content  
-   - Attempts MIME type detection  
+   - Detects MIME type (including JSON files)  
    - Generates SHA-256 hash  
    - Checks for duplicates  
    - Collects metadata  
@@ -169,6 +164,7 @@ http://127.0.0.1:8000
 - Clean and simple single-page design  
 - Demonstrates a complete file ingestion pipeline  
 - Supports multiple file uploads  
+- Correctly detects common file types including JSON  
 - Uses hashing for duplicate detection  
 - Modular backend logic, easy to extend  
 - Clear separation between frontend and backend  
@@ -177,7 +173,6 @@ http://127.0.0.1:8000
 
 ## Negatives of the Project
 
-- JSON file type not properly detected  
 - Drag-and-drop upload not fully functional  
 - No persistent database storage  
 - Dummy authentication only  
@@ -188,7 +183,6 @@ http://127.0.0.1:8000
 
 ## Future Enhancements / Initiatives
 
-- Proper JSON file detection using content parsing  
 - Fully functional drag-and-drop upload support  
 - Database integration (PostgreSQL / MongoDB)  
 - Real authentication using JWT  
@@ -203,11 +197,13 @@ http://127.0.0.1:8000
 ## Deployment Notes
 
 - Frontend and backend run together locally  
-- For production deployment:
-  - Backend: Render, Railway, Fly.io, or VPS  
-  - Frontend: Vercel or Netlify (static only)  
+- **Production deployment is done using Railway**
+- Railway is used to host:
+  - Backend (FastAPI)
+  - Frontend (HTML, CSS, JavaScript)
+- No separate frontend hosting service is used
 
-Note: Vercel does not run FastAPI directly.
+Railway supports running FastAPI directly, allowing both frontend and backend to be deployed on the same platform.
 
 ---
 
